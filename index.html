@@ -1,0 +1,2349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SDA — Secure Document Management</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap');
+
+  :root {
+    --bg: #F7F6F3;
+    --surface: #FFFFFF;
+    --surface2: #F0EEE9;
+    --border: #E2DED6;
+    --border2: #C8C3BA;
+    --text: #1A1916;
+    --text2: #6B6760;
+    --text3: #9B9891;
+    --accent: #2D6A4F;
+    --accent-light: #E8F4EE;
+    --accent-text: #1B4332;
+    --red: #C0392B;
+    --red-light: #FDECEA;
+    --red-text: #7B241C;
+    --blue: #1A56A0;
+    --blue-light: #EBF2FB;
+    --blue-text: #102A52;
+    --amber: #92600A;
+    --amber-light: #FEF3DC;
+    --radius: 10px;
+    --radius-sm: 6px;
+    --shadow: 0 1px 3px rgba(0,0,0,.06), 0 1px 8px rgba(0,0,0,.04);
+    --shadow-md: 0 4px 16px rgba(0,0,0,.08), 0 1px 4px rgba(0,0,0,.05);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 15px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  /* ── Screens ── */
+  .screen { display: none; min-height: 100vh; }
+  .screen.active { display: flex; flex-direction: column; }
+
+  /* ── Login ── */
+  #s-login {
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1rem;
+    background: var(--bg);
+  }
+  .login-box {
+    width: 100%;
+    max-width: 400px;
+  }
+  .login-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 2rem;
+  }
+  .login-logo .logo-mark {
+    width: 40px; height: 40px;
+    background: var(--accent);
+    border-radius: var(--radius-sm);
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 20px;
+  }
+  .login-logo .logo-text {
+    font-size: 22px; font-weight: 600; letter-spacing: -.3px;
+  }
+  .login-logo .logo-sub {
+    font-size: 12px; color: var(--text2); margin-top: 1px;
+  }
+  .login-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-md);
+    padding: 2rem;
+  }
+  .login-card h2 {
+    font-size: 18px; font-weight: 600; margin-bottom: 4px;
+  }
+  .login-card .sub {
+    font-size: 13px; color: var(--text2); margin-bottom: 1.5rem;
+  }
+  .login-hint {
+    margin-top: 1.25rem;
+    padding: .75rem 1rem;
+    background: var(--blue-light);
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    color: var(--blue-text);
+    border: 1px solid #BDD5F5;
+  }
+  .login-hint code {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    background: rgba(26,86,160,.1);
+    padding: 1px 5px;
+    border-radius: 3px;
+  }
+
+  /* ── Topbar ── */
+  .topbar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 1.5rem;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    box-shadow: var(--shadow);
+  }
+  .topbar-left { display: flex; align-items: center; gap: 12px; }
+  .topbar-logo {
+    display: flex; align-items: center; gap: 8px;
+    font-weight: 600; font-size: 16px; letter-spacing: -.2px;
+  }
+  .topbar-logo .lm {
+    width: 30px; height: 30px;
+    background: var(--accent);
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 15px;
+  }
+  .badge-role {
+    font-size: 11px; font-weight: 500; padding: 2px 8px;
+    border-radius: 999px; background: var(--accent-light);
+    color: var(--accent-text); border: 1px solid #B7DFC8;
+  }
+  .topbar-right { display: flex; align-items: center; gap: 10px; }
+  .user-chip {
+    display: flex; align-items: center; gap: 8px;
+    padding: 4px 12px 4px 4px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    font-size: 13px;
+  }
+  .avatar {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: #fff;
+    font-size: 11px; font-weight: 600;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .avatar.lg {
+    width: 40px; height: 40px; font-size: 15px;
+  }
+
+  /* ── Main layout ── */
+  .main { flex: 1; display: flex; flex-direction: column; }
+
+  /* ── Admin tabs ── */
+  .admin-tabs {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 1.5rem;
+    display: flex; gap: 0;
+    overflow-x: auto;
+  }
+  .tab-btn {
+    padding: 0 4px;
+    height: 48px;
+    display: flex; align-items: center; gap: 7px;
+    font-size: 14px; font-weight: 500;
+    color: var(--text2);
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    margin-right: 1.5rem;
+    transition: color .15s, border-color .15s;
+    background: none; border-top: none; border-left: none; border-right: none;
+    white-space: nowrap;
+  }
+  .tab-btn.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
+  .tab-btn:hover:not(.active) { color: var(--text); }
+
+  /* ── Content area ── */
+  .content { padding: 1.75rem 1.5rem; max-width: 900px; width: 100%; margin: 0 auto; }
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* ── Cards ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1.25rem;
+  }
+  .card-title {
+    font-size: 13px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: .06em;
+    color: var(--text2); margin-bottom: 1rem;
+  }
+
+  /* ── Form elements ── */
+  .field { margin-bottom: 1rem; }
+  .field:last-child { margin-bottom: 0; }
+  label.lbl { font-size: 13px; font-weight: 500; color: var(--text2); display: block; margin-bottom: 5px; }
+  input[type=text], input[type=password], input[type=date], select, textarea {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-family: inherit;
+    background: var(--surface);
+    color: var(--text);
+    transition: border-color .15s, box-shadow .15s;
+    outline: none;
+  }
+  input[type=text]:focus, input[type=password]:focus, input[type=date]:focus, select:focus, textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(45,106,79,.12);
+  }
+  input[type=file] {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1.5px dashed var(--border2);
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    background: var(--surface2);
+    color: var(--text2);
+    cursor: pointer;
+  }
+  input[type=file]:hover { border-color: var(--accent); background: var(--accent-light); }
+  select[multiple] { height: 80px; }
+
+  .checkbox-group, .radio-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .checkbox-item, .radio-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .checkbox-item input, .radio-item input {
+    margin: 0;
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+  }
+  .checkbox-item label, .radio-item label {
+    margin: 0;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 400;
+  }
+
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+  @media(max-width:600px){ .grid2, .grid3 { grid-template-columns: 1fr; } }
+
+  /* ── Buttons ── */
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 16px;
+    border-radius: var(--radius-sm);
+    font-size: 14px; font-weight: 500; font-family: inherit;
+    cursor: pointer;
+    transition: background .15s, transform .1s, opacity .15s;
+    border: 1px solid transparent;
+    text-decoration: none;
+  }
+  .btn:active { transform: scale(.98); }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: #245c42; }
+  .btn-outline { background: var(--surface); color: var(--text); border-color: var(--border2); }
+  .btn-outline:hover { background: var(--surface2); }
+  .btn-danger { background: var(--red-light); color: var(--red-text); border-color: #F1BCBA; }
+  .btn-danger:hover { background: #FAD7D5; }
+  .btn-sm { padding: 5px 11px; font-size: 13px; }
+  .btn-full { width: 100%; justify-content: center; }
+
+  /* ── Stats row ── */
+  .stats-row { display: flex; gap: 12px; margin-bottom: 1.5rem; flex-wrap: wrap; }
+  .stat-card {
+    flex: 1;
+    min-width: 150px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem 1.25rem;
+    box-shadow: var(--shadow);
+  }
+  .stat-card .label { font-size: 12px; color: var(--text2); font-weight: 500; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 4px; }
+  .stat-card .value { font-size: 28px; font-weight: 600; letter-spacing: -.5px; }
+
+  /* ── Table-like rows ── */
+  .list-row {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding: .875rem 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .list-row:last-child { border-bottom: none; padding-bottom: 0; }
+  .list-row:first-child { padding-top: 0; }
+  .list-left { display: flex; align-items: center; gap: 12px; min-width: 0; flex: 1; }
+  .list-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end; }
+
+  .pdf-icon {
+    width: 38px; height: 44px; border-radius: 4px;
+    background: var(--red-light);
+    border: 1px solid #F1BCBA;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 700; color: var(--red); font-family: 'IBM Plex Mono', monospace;
+    flex-shrink: 0;
+    letter-spacing: .5px;
+  }
+  .pdf-icon.file-xls  { background: var(--accent-light); border-color: #B7DFC8; color: var(--accent-text); }
+  .pdf-icon.file-doc  { background: var(--blue-light);  border-color: #BDD5F5; color: var(--blue-text); }
+  .pdf-icon.file-ppt  { background: var(--amber-light); border-color: #FCCF5D; color: var(--amber); }
+  .pdf-icon.file-img  { background: var(--surface2);    border-color: var(--border2); color: var(--text2); }
+  .pdf-icon.file-zip  { background: var(--surface2);    border-color: var(--border2); color: var(--text2); }
+  .pdf-icon.file-txt  { background: var(--surface2);    border-color: var(--border2); color: var(--text2); }
+  .upload-filelist {
+    margin-top: .5rem;
+    display: flex; flex-direction: column; gap: 4px;
+  }
+  .upload-filelist .ufl-row {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 12px; color: var(--text2);
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 5px 10px;
+  }
+  .upload-filelist .ufl-row .ufl-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text); }
+  .upload-filelist .ufl-row .ufl-size { flex-shrink: 0; font-family: 'IBM Plex Mono', monospace; font-size: 11px; }
+
+  .doc-name { font-weight: 500; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .doc-meta { font-size: 12px; color: var(--text2); margin-top: 2px; }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; }
+  .chip {
+    font-size: 11px; padding: 2px 8px;
+    background: var(--accent-light); color: var(--accent-text);
+    border: 1px solid #B7DFC8; border-radius: 999px;
+    font-weight: 500;
+  }
+  .chip.gray { background: var(--surface2); color: var(--text2); border-color: var(--border); }
+  .chip.blue { background: var(--blue-light); color: var(--blue-text); border-color: #BDD5F5; }
+  .chip.amber { background: var(--amber-light); color: var(--amber); border-color: #FCCF5D; }
+  .chip.red { background: var(--red-light); color: var(--red-text); border-color: #F1BCBA; }
+
+  /* ── Alerts ── */
+  .alert {
+    padding: .75rem 1rem; border-radius: var(--radius-sm);
+    font-size: 13px; margin-bottom: 1rem; display: none;
+    border: 1px solid;
+  }
+  .alert-err { background: var(--red-light); color: var(--red-text); border-color: #F1BCBA; }
+  .alert-ok { background: var(--accent-light); color: var(--accent-text); border-color: #B7DFC8; }
+  .alert-info { background: var(--blue-light); color: var(--blue-text); border-color: #BDD5F5; }
+
+  /* ── User credential card ── */
+  .cred-box {
+    background: var(--surface2);
+    border: 1px dashed var(--border2);
+    border-radius: var(--radius-sm);
+    padding: 1rem;
+    font-size: 13px;
+    display: none;
+    margin-top: 1rem;
+  }
+  .cred-box .cred-title { font-weight: 600; margin-bottom: .5rem; color: var(--accent-text); }
+  .cred-box .cred-line { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+  .cred-box .cred-line:last-child { margin-bottom: 0; }
+  .cred-box .cred-key { color: var(--text2); font-size: 12px; }
+  .cred-box .cred-val { font-family: 'IBM Plex Mono', monospace; font-size: 13px; font-weight: 500; letter-spacing: .02em; }
+
+  /* ── Empty state ── */
+  .empty-state {
+    text-align: center; padding: 2.5rem 1rem;
+    color: var(--text3); font-size: 14px;
+  }
+  .empty-state .empty-icon { font-size: 40px; margin-bottom: .75rem; }
+
+  /* ── User portal ── */
+  #s-user .content { max-width: 800px; }
+
+  .welcome-banner {
+    background: linear-gradient(135deg, var(--accent) 0%, #1B4332 100%);
+    color: #fff;
+    border-radius: var(--radius);
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1.5rem;
+    display: flex; align-items: center; gap: 14px;
+    box-shadow: var(--shadow-md);
+  }
+  .welcome-banner .wtext h2 { font-size: 17px; font-weight: 600; margin-bottom: 2px; }
+  .welcome-banner .wtext p { font-size: 13px; opacity: .8; }
+  .welcome-banner .avatar { background: rgba(255,255,255,.25); color: #fff; }
+
+  .doc-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    margin-bottom: .875rem;
+    overflow: hidden;
+    transition: box-shadow .15s;
+  }
+  .doc-card:hover { box-shadow: var(--shadow-md); }
+  .doc-card-inner {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1rem 1.25rem; gap: 12px;
+  }
+  .doc-card-left { display: flex; align-items: center; gap: 12px; min-width: 0; flex: 1; }
+  .doc-card-actions { display: flex; gap: 8px; flex-shrink: 0; }
+
+  /* ── PDF Viewer ── */
+  .viewer-bar {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius) var(--radius) 0 0;
+    padding: .875rem 1.25rem;
+    display: flex; align-items: center; justify-content: space-between;
+    box-shadow: var(--shadow);
+  }
+  .viewer-bar .vtitle { font-weight: 600; font-size: 14px; }
+  .viewer-frame-wrap {
+    border: 1px solid var(--border);
+    border-top: none;
+    border-radius: 0 0 var(--radius) var(--radius);
+    overflow: hidden;
+    background: #525659;
+    margin-bottom: 1.5rem;
+  }
+  .viewer-frame-wrap iframe {
+    display: block; width: 100%; height: 540px; border: none;
+  }
+
+  /* ── Section header ── */
+  .section-hd {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 1rem;
+  }
+  .section-hd h3 { font-size: 15px; font-weight: 600; }
+  .section-hd p { font-size: 13px; color: var(--text2); }
+
+  /* ── Divider ── */
+  .divider { border: none; border-top: 1px solid var(--border); margin: 1.25rem 0; }
+
+  /* ── Collapsible ── */
+  .collapsible {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 1rem;
+    margin-bottom: 1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-weight: 500;
+    transition: background .15s;
+  }
+  .collapsible:hover { background: var(--border); }
+  .collapsible.open { background: var(--accent-light); }
+  .collapsible-content {
+    display: none;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+  }
+  .collapsible.open + .collapsible-content { display: block; }
+
+  /* ── Icon glyphs (CSS only, no external lib) ── */
+  .ico { display: inline-flex; align-items: center; justify-content: center; }
+
+  /* ── Scrollbar ── */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+  @media(max-width:480px){
+    .stats-row { flex-direction: column; }
+    .doc-card-inner { flex-direction: column; align-items: flex-start; }
+    .doc-card-actions { width: 100%; }
+    .doc-card-actions .btn { flex: 1; justify-content: center; }
+    .topbar { padding: 0 1rem; }
+    .content { padding: 1.25rem 1rem; }
+    .list-right { flex-direction: column; width: 100%; }
+  }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+</head>
+<body>
+
+<!-- ══════════════════════════════
+     LOGIN SCREEN
+════════════════════════════════ -->
+<div id="s-login" class="screen active">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="logo-mark">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="3" y="1" width="11" height="14" rx="1.5" stroke="white" stroke-width="1.5" fill="none"/>
+          <path d="M6 5h5M6 8h5M6 11h3" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+          <circle cx="15" cy="15" r="3.5" fill="white" opacity=".9"/>
+          <path d="M14 15l.9.9 1.6-1.8" stroke="#2D6A4F" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div>
+        <div class="logo-text">SDA BASIC SCHOOL</div>
+        <div class="logo-sub">Secure document management</div>
+      </div>
+    </div>
+
+    <div class="login-card">
+      <h2>Sign in</h2>
+      <p class="sub">Enter your User ID and password to access your documents.</p>
+
+      <div id="cloud-status" class="alert" style="display:none;background:var(--blue-light);border:1px solid #BDD5F5;color:var(--blue-text);margin-bottom:1rem;">Connecting…</div>
+
+      <div class="field">
+        <label class="lbl">User ID</label>
+        <input type="text" id="li-id" placeholder="e.g. USR-0001" autocomplete="username" />
+      </div>
+      <div class="field">
+        <label class="lbl">Password</label>
+        <input type="password" id="li-pass" placeholder="Your password" autocomplete="current-password" />
+      </div>
+
+      <div id="li-err" class="alert alert-err" style="display:none"></div>
+
+      <button class="btn btn-primary btn-full" onclick="doLogin()" id="login-btn">
+        <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M6 2H2.5A1.5 1.5 0 001 3.5v8A1.5 1.5 0 002.5 13H6M10 10.5l3-3-3-3M13 7.5H6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Sign in
+      </button>
+
+      <div class="login-hint">
+        Created By Borngreat Graphicx <code>LOC: Old Ningo</code>  <code>Call: 0249330825</code>
+      </div>
+
+      </div></div></div>
+
+<!-- ══════════════════════════════
+     ADMIN SCREEN
+════════════════════════════════ -->
+<div id="s-admin" class="screen">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-logo">
+        <div class="lm">
+          <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><rect x="3" y="1" width="11" height="14" rx="1.5" stroke="white" stroke-width="1.5" fill="none"/><path d="M6 5h5M6 8h5M6 11h3" stroke="white" stroke-width="1.5" stroke-linecap="round"/><circle cx="15" cy="15" r="3.5" fill="white" opacity=".9"/><path d="M14 15l.9.9 1.6-1.8" stroke="#2D6A4F" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        DocPortal
+      </div>
+      <span class="badge-role">Administrator</span>
+    </div>
+    <div class="topbar-right">
+      <div class="user-chip">
+        <div class="avatar" style="background:#1A56A0">A</div>
+        <span id="admin-topbar-id">admin</span>
+      </div>
+      <button class="btn btn-outline btn-sm" onclick="openChangePasswordModal()">
+        <svg width="14" height="14" viewBox="0 0 15 15" fill="none"><rect x="3" y="6" width="9" height="7" rx="1" stroke="currentColor" stroke-width="1.4" fill="none"/><path d="M5 6V4.5a2.5 2.5 0 015 0V6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><circle cx="7.5" cy="9.5" r=".8" fill="currentColor"/></svg>
+        Change Password
+      </button>
+      <button class="btn btn-outline btn-sm" onclick="logout()">
+        <svg width="14" height="14" viewBox="0 0 15 15" fill="none"><path d="M9 2H12.5A1.5 1.5 0 0114 3.5v8A1.5 1.5 0 0112.5 13H9M6 10.5l-3-3 3-3M3 7.5H10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Sign out
+      </button>
+    </div>
+  </div>
+
+  <div class="admin-tabs">
+    <button class="tab-btn active" onclick="adminTab(this,'p-pdfs')">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="1" width="9" height="12" rx="1" stroke="currentColor" stroke-width="1.3" fill="none"/><path d="M5 4h3M5 7h3M5 10h2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><rect x="9" y="8" width="5" height="6" rx="1" fill="currentColor" opacity=".15"/><path d="M10 11l1.5 1.5L14 10" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      PDFs
+    </button>
+    <button class="tab-btn" onclick="adminTab(this,'p-users')">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="6" cy="5" r="2.5" stroke="currentColor" stroke-width="1.3" fill="none"/><path d="M1.5 13.5c0-2.5 2-4 4.5-4s4.5 1.5 4.5 4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M11 3.5c1 .3 1.7 1.1 1.7 2s-.7 1.7-1.7 2M12.5 10c1.5.6 2.5 1.8 2.5 3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+      Users
+    </button>
+    <button class="tab-btn" onclick="adminTab(this,'p-inbox')">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1" y="4" width="14" height="10" rx="1.5" stroke="currentColor" stroke-width="1.3" fill="none"/><path d="M1 7h4l1.5 2h3L11 7h4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      User Inbox <span id="inbox-badge" style="display:none;background:var(--red);color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:999px;margin-left:4px">0</span>
+    </button>
+    <button class="tab-btn" onclick="adminTab(this,'p-audit')">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="12" height="12" rx="1" stroke="currentColor" stroke-width="1.3" fill="none"/><path d="M2 5h12M5 8h6M5 11h4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+      Audit Log
+    </button>
+    <button class="tab-btn" onclick="adminTab(this,'p-settings')">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="2" stroke="currentColor" stroke-width="1.3" fill="none"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M2.6 2.6l1.4 1.4M12 12l1.4 1.4M2.6 13.4l1.4-1.4M12 4l1.4-1.4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+      Settings
+    </button>
+  </div>
+
+  <div class="main">
+    <div class="content">
+
+      <!-- ── STATS ── -->
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="label">Total users</div>
+          <div class="value" id="stat-users">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">PDFs uploaded</div>
+          <div class="value" id="stat-pdfs">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Assignments</div>
+          <div class="value" id="stat-assigns">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Total views</div>
+          <div class="value" id="stat-views">0</div>
+        </div>
+      </div>
+
+      <!-- ══ PDFs PANEL ══ -->
+      <div id="p-pdfs" class="panel active">
+
+        <div class="card">
+          <div class="card-title">Upload new PDF</div>
+          <div class="grid2">
+            <div class="field">
+              <label class="lbl">Document title</label>
+              <input type="text" id="pdf-title" placeholder="e.g. Q3 Financial Report" />
+            </div>
+            <div class="field">
+              <label class="lbl">Category</label>
+              <select id="pdf-category">
+                <option value="general">General</option>
+                <option value="financial">Subject Teacher</option>
+                <option value="legal">Head-Teacher</option>
+                <option value="hr">HR / NSS Personnel</option>
+                <option value="technical">Assistant Head-Teacher</option>
+                <option value="compliance">Technical</option>
+              </select>
+            </div>
+          </div>
+          <div class="grid2">
+            <div class="field">
+              <label class="lbl">Tags <span style="font-weight:400;color:var(--text3)">(comma-separated)</span></label>
+              <input type="text" id="pdf-tags" placeholder="e.g. quarterly, report, 2024" />
+            </div>
+            <div class="field">
+              <label class="lbl">Assign to users <span style="font-weight:400;color:var(--text3)">(hold Ctrl/Cmd for multiple)</span></label>
+              <select id="pdf-assign" multiple></select>
+            </div>
+          </div>
+          <div class="grid2">
+            <div class="field">
+              <label class="lbl">Access type</label>
+              <select id="pdf-access">
+                <option value="view">View only</option>
+                <option value="download">View & download</option>
+              </select>
+            </div>
+            <div class="field">
+              <label class="lbl">Expiration date <span style="font-weight:400;color:var(--text3)">(optional)</span></label>
+              <input type="date" id="pdf-expire" />
+            </div>
+          </div>
+          <div class="field">
+            <label class="lbl">Files <span style="font-weight:400;color:var(--text3)">(PDF, Word, Excel, PowerPoint, images, text — multiple allowed)</span></label>
+            <input type="file" id="pdf-file" accept=".pdf,.jpg,.jpeg,.png,.gif,.webp,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.csv" multiple onchange="previewSelectedFiles('pdf-file','pdf-file-preview')" />
+            <div id="pdf-file-preview" class="upload-filelist"></div>
+          </div>
+          <div class="field">
+            <label class="lbl">Or upload a whole folder <span style="font-weight:400;color:var(--text3)">(all files inside will be zipped into one document)</span></label>
+            <input type="file" id="folder-upload" webkitdirectory directory multiple onchange="previewSelectedFiles('folder-upload','folder-file-preview')" />
+            <div id="folder-file-preview" class="upload-filelist"></div>
+          </div>
+          <div id="pdf-progress" class="alert" style="display:none;background:var(--blue-light);border:1px solid #BDD5F5;color:var(--blue-text)"></div>
+          <div id="pdf-err" class="alert alert-err"></div>
+          <div id="pdf-ok" class="alert alert-ok"></div>
+          <button class="btn btn-primary" id="pdf-upload-btn" onclick="uploadPdf()">
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M7.5 1v9M4.5 4L7.5 1l3 3M2 10v2.5A1.5 1.5 0 003.5 14h8a1.5 1.5 0 001.5-1.5V10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Upload &amp; assign
+          </button>
+        </div>
+
+        <div class="section-hd">
+          <h3>Uploaded PDFs</h3>
+          <p id="pdf-count-label">0 documents</p>
+        </div>
+        <div class="card" style="padding:.5rem 1.5rem">
+          <div id="pdf-list">
+            <div class="empty-state">
+              <div class="empty-icon">📄</div>
+              No PDFs uploaded yet. Upload one above.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ USERS PANEL ══ -->
+      <div id="p-users" class="panel">
+
+        <div class="card">
+          <div class="card-title">Generate new user</div>
+          <div class="grid2">
+            <div class="field">
+              <label class="lbl">Full Name</label><input type="text" id="nu-name" placeholder="e.g. John Doe" /></div><div class="field"><label class="lbl">User ID</label><input type="text" id="nu-userid" placeholder="e.g. USER001" /></div><div class="field"><label class="lbl">Password</label><input type="password" id="nu-password" placeholder="Enter password" />
+            </div>
+            <div class="field">
+              <label class="lbl">Role</label>
+              <select id="nu-role">
+                <option value="viewer">Viewer</option>
+                <option value="editor">Editor</option>
+                <option value="manager">Manager</option>
+              </select>
+            </div>
+          </div>
+          <div class="field">
+            <label class="lbl">Department / note <span style="font-weight:400;color:var(--text3)">(optional)</span></label>
+            <input type="text" id="nu-dept" placeholder="e.g. Finance team" />
+          </div>
+          <div class="field">
+            <div class="checkbox-item">
+              <input type="checkbox" id="nu-active" checked />
+              <label for="nu-active">Active (user can log in)</label>
+            </div>
+          </div>
+          <div id="nu-err" class="alert alert-err"></div>
+          <button class="btn btn-primary" onclick="genUser()">
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><circle cx="6" cy="5" r="2.5" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M1.5 13.5c0-2.5 2-4 4.5-4s4.5 1.5 4.5 4M11.5 5v4M9.5 7h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            Generate user
+          </button>
+
+          <div class="cred-box" id="nu-cred">
+            <div class="cred-title">✅ User created — share these credentials</div>
+            <div class="cred-line">
+              <span class="cred-key">User ID</span>
+              <span class="cred-val" id="cred-id">—</span>
+            </div>
+            <div class="cred-line">
+              <span class="cred-key">Username</span>
+              <span class="cred-val" id="cred-name">—</span>
+            </div>
+            <div class="cred-line">
+              <span class="cred-key">Role</span>
+              <span class="cred-val" id="cred-role">—</span>
+            </div>
+            <hr class="divider" style="margin:.75rem 0" />
+            <p style="font-size:12px;color:var(--text2)">Users log in with their User ID as the ID field and their username as the password/username field.</p>
+          </div>
+        </div>
+
+        <div class="section-hd">
+          <h3>All users</h3>
+          <p id="user-count-label">0 users</p>
+        </div>
+        <div class="card" style="padding:.5rem 1.5rem">
+          <div id="user-list">
+            <div class="empty-state">
+              <div class="empty-icon">👥</div>
+              No users generated yet.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ USER INBOX PANEL ══ -->
+      <div id="p-inbox" class="panel">
+        <div class="section-hd">
+          <h3>Files uploaded by users</h3>
+          <p id="inbox-count-label">0 files</p>
+        </div>
+        <div class="card" style="padding:.5rem 1.5rem">
+          <div id="inbox-list">
+            <div class="empty-state">
+              <div class="empty-icon">📥</div>
+              No files received from users yet.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ AUDIT LOG PANEL ══ -->
+      <div id="p-audit" class="panel">
+        <div class="section-hd">
+          <h3>Activity Log</h3>
+          <button class="btn btn-danger btn-sm" onclick="clearAuditLog()">
+            <svg width="14" height="14" viewBox="0 0 15 15" fill="none"><path d="M3 3.5h9M5.5 3.5V2.5a.5.5 0 01.5-.5h3a.5.5 0 01.5.5v1M6 6.5v4M9 6.5v4M4 3.5l.5 8.5a1 1 0 001 1h4a1 1 0 001-1L11 3.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Clear All
+          </button>
+        </div>
+        <div class="card" style="padding:.5rem 1.5rem">
+          <div id="audit-list">
+            <div class="empty-state">
+              <div class="empty-icon">📋</div>
+              No activity recorded yet.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ SETTINGS PANEL ══ -->
+      <div id="p-settings" class="panel">
+        <div class="card">
+          <div class="card-title">System Settings</div>
+          
+          <div class="collapsible" onclick="toggleCollapsible(this)">
+            <span>📋 PDF Settings</span>
+            <span>▾</span>
+          </div>
+          <div class="collapsible-content">
+            <div class="field">
+              <label class="lbl">Maximum PDF file size (MB)</label>
+              <input type="text" id="set-max-size" value="20" />
+            </div>
+            <div class="field">
+              <label class="lbl">Default access type</label>
+              <select id="set-default-access">
+                <option value="view">View only</option>
+                <option value="download">View & download</option>
+              </select>
+            </div>
+            <div class="field">
+              <div class="checkbox-item">
+                <input type="checkbox" id="set-auto-expire" />
+                <label for="set-auto-expire">Auto-expire documents after 90 days</label>
+              </div>
+            </div>
+          </div>
+
+          <div class="collapsible" onclick="toggleCollapsible(this)">
+            <span>👥 User Settings</span>
+            <span>▾</span>
+          </div>
+          <div class="collapsible-content">
+            <div class="field">
+              <label class="lbl">Default user role</label>
+              <select id="set-default-role">
+                <option value="viewer">Viewer</option>
+                <option value="editor">Editor</option>
+                <option value="manager">Manager</option>
+              </select>
+            </div>
+            <div class="field">
+              <div class="checkbox-item">
+                <input type="checkbox" id="set-email-on-create" />
+                <label for="set-email-on-create">Send credentials via email (coming soon)</label>
+              </div>
+            </div>
+            <div class="field">
+              <div class="checkbox-item">
+                <input type="checkbox" id="set-require-pwd-change" />
+                <label for="set-require-pwd-change">Force password change on first login</label>
+              </div>
+            </div>
+          </div>
+
+          <div class="collapsible" onclick="toggleCollapsible(this)">
+            <span>🔒 Security Settings</span>
+            <span>▾</span>
+          </div>
+          <div class="collapsible-content">
+            <div class="field">
+              <div class="checkbox-item">
+                <input type="checkbox" id="set-audit-logging" checked />
+                <label for="set-audit-logging">Enable audit logging</label>
+              </div>
+            </div>
+            <div class="field">
+              <div class="checkbox-item">
+                <input type="checkbox" id="set-track-downloads" checked />
+                <label for="set-track-downloads">Track all document downloads</label>
+              </div>
+            </div>
+            <div class="field">
+              <div class="checkbox-item">
+                <input type="checkbox" id="set-track-views" checked />
+                <label for="set-track-views">Track document views</label>
+              </div>
+            </div>
+            <div class="field">
+              <label class="lbl">Session timeout (minutes)</label>
+              <input type="text" id="set-session-timeout" value="30" />
+            </div>
+          </div>
+
+          <button class="btn btn-primary" onclick="saveSettings()">
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M7.5 1v9M4.5 4L7.5 1l3 3M2 10v2.5A1.5 1.5 0 003.5 14h8a1.5 1.5 0 001.5-1.5V10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Save Settings
+          </button>
+
+          <hr class="divider" style="margin:1.5rem 0" />
+
+          <div class="card-title" style="margin-top:0">🔑 Change Admin Credentials</div>
+          <div id="admin-cred-err" class="alert alert-err"></div>
+          <div id="admin-cred-ok" class="alert alert-ok"></div>
+
+          <div class="field">
+            <label class="lbl">New Admin ID <span style="font-weight:400;color:var(--text3)">(leave blank to keep current)</span></label>
+            <input type="text" id="new-admin-id" placeholder="Leave blank to keep current ID" />
+          </div>
+
+          <div class="field">
+            <label class="lbl">New Password <span style="font-weight:400;color:var(--text3)">(leave blank to keep current)</span></label>
+            <div style="position:relative">
+              <input type="password" id="new-admin-pass" placeholder="Enter new password" style="padding-right:70px" />
+              <button type="button" onclick="toggleAdminPassVis('new-admin-pass','tog-new')" id="tog-new" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:11px;font-weight:500;color:var(--accent);padding:2px 4px;">Show</button>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="lbl">Confirm New Password</label>
+            <div style="position:relative">
+              <input type="password" id="new-admin-pass2" placeholder="Repeat new password" style="padding-right:70px" />
+              <button type="button" onclick="toggleAdminPassVis('new-admin-pass2','tog-new2')" id="tog-new2" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:11px;font-weight:500;color:var(--accent);padding:2px 4px;">Show</button>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="lbl">Current Password <span style="color:var(--red);font-weight:500">*</span> <span style="font-weight:400;color:var(--text3)">(required to confirm any changes)</span></label>
+            <div style="position:relative">
+              <input type="password" id="current-admin-pass" placeholder="Enter your current password" style="padding-right:70px" />
+              <button type="button" onclick="toggleAdminPassVis('current-admin-pass','tog-cur')" id="tog-cur" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:11px;font-weight:500;color:var(--accent);padding:2px 4px;">Show</button>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+            <button class="btn btn-primary" onclick="changeAdminCredentials()">
+              <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M4 4V2.5A3.5 3.5 0 0111 2.5V4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" fill="none"/><rect x="2" y="4" width="11" height="10" rx="1" stroke="currentColor" stroke-width="1.4" fill="none"/><circle cx="7.5" cy="9" r="1.5" stroke="currentColor" stroke-width="1.3" fill="none"/><path d="M7.5 10.5V12" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+              Update Credentials
+            </button>
+            <span style="font-size:12px;color:var(--text3)">Current ID: <strong id="current-admin-id-display" style="color:var(--text2);font-family:'IBM Plex Mono',monospace"></strong></span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     USER PORTAL SCREEN
+════════════════════════════════ -->
+<div id="s-user" class="screen">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-logo">
+        <div class="lm">
+          <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><rect x="3" y="1" width="11" height="14" rx="1.5" stroke="white" stroke-width="1.5" fill="none"/><path d="M6 5h5M6 8h5M6 11h3" stroke="white" stroke-width="1.5" stroke-linecap="round"/><circle cx="15" cy="15" r="3.5" fill="white" opacity=".9"/><path d="M14 15l.9.9 1.6-1.8" stroke="#2D6A4F" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        DocPortal
+      </div>
+    </div>
+    <div class="topbar-right">
+      <div class="user-chip">
+        <div class="avatar" id="u-avatar">U</div>
+        <span id="u-topbar-name">User</span>
+      </div>
+      <button class="btn btn-outline btn-sm" onclick="logout()">
+        <svg width="14" height="14" viewBox="0 0 15 15" fill="none"><path d="M9 2H12.5A1.5 1.5 0 0114 3.5v8A1.5 1.5 0 0112.5 13H9M6 10.5l-3-3 3-3M3 7.5H10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Sign out
+      </button>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="content">
+
+      <div class="welcome-banner">
+        <div class="avatar lg" id="u-banner-avatar">U</div>
+        <div class="wtext">
+          <h2 id="u-welcome-name">Welcome back</h2>
+          <p id="u-welcome-id">User ID: —</p>
+        </div>
+      </div>
+
+      
+      <!-- Profile Image Card -->
+      <div class="card">
+        <div class="card-title">🖼️ Profile Picture</div>
+        <div style="display:flex;align-items:center;gap:1.25rem;flex-wrap:wrap">
+          <div id="profile-pic-wrap" style="position:relative;flex-shrink:0">
+            <div id="profile-avatar-large" style="width:72px;height:72px;border-radius:50%;background:var(--accent);color:#fff;font-size:26px;font-weight:600;display:flex;align-items:center;justify-content:center;border:3px solid var(--border);overflow:hidden;flex-shrink:0;">
+              <span id="profile-avatar-initials">U</span>
+              <img id="profile-avatar-img" src="" alt="Profile" style="display:none;width:100%;height:100%;object-fit:cover;border-radius:50%;" />
+            </div>
+          </div>
+          <div style="flex:1;min-width:200px">
+            <p style="font-size:13px;color:var(--text2);margin-bottom:.75rem">Upload a profile picture. JPG, PNG, GIF or WebP — max 5 MB.</p>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+              <label for="profile-pic-input" class="btn btn-outline btn-sm" style="cursor:pointer">
+                <svg width="14" height="14" viewBox="0 0 15 15" fill="none"><path d="M7.5 1v9M4.5 4L7.5 1l3 3M2 10v2.5A1.5 1.5 0 003.5 14h8a1.5 1.5 0 001.5-1.5V10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                Choose photo
+              </label>
+              <input type="file" id="profile-pic-input" accept="image/jpeg,image/png,image/gif,image/webp" style="display:none" onchange="handleProfilePicUpload(this)" />
+              <button class="btn btn-danger btn-sm" id="profile-pic-remove" style="display:none" onclick="removeProfilePic()">Remove</button>
+            </div>
+            <div id="profile-pic-err" class="alert alert-err" style="margin-top:.5rem;margin-bottom:0"></div>
+            <div id="profile-pic-ok" class="alert alert-ok" style="margin-top:.5rem;margin-bottom:0"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">📤 Send files to admin</div>
+        <div class="field">
+          <label class="lbl">File title / description</label>
+          <input type="text" id="user-upload-title" placeholder="e.g. My signed contract, Profile photo..." />
+        </div>
+        <div class="field">
+          <label class="lbl">Select file <span style="font-weight:400;color:var(--text3)">(PDF, images, Word, Excel — max 20 MB)</span></label>
+          <input type="file" id="user-upload" accept=".pdf,.jpg,.jpeg,.png,.gif,.webp,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.csv" />
+        </div>
+        <div id="user-upload-err" class="alert alert-err"></div>
+        <div id="user-upload-ok" class="alert alert-ok"></div>
+        <button class="btn btn-primary" onclick="uploadUserFiles()">
+          <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M7.5 1v9M4.5 4L7.5 1l3 3M2 10v2.5A1.5 1.5 0 003.5 14h8a1.5 1.5 0 001.5-1.5V10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Send to admin
+        </button>
+        <div style="margin-top:1rem" id="user-sent-wrap" style="display:none">
+          <div class="section-hd" style="margin-bottom:.5rem"><h3 style="font-size:13px;color:var(--text2)">Files you've sent</h3></div>
+          <div id="user-sent-list"></div>
+        </div>
+      </div>
+<div class="section-hd">
+        <h3>Your documents</h3>
+        <p id="u-doc-count">—</p>
+      </div>
+
+      <div id="user-doc-list"></div>
+
+      <div id="viewer-wrap" style="display:none;margin-top:1.5rem">
+        <div class="viewer-bar">
+          <span class="vtitle" id="viewer-title">Document</span>
+          <div style="display:flex;gap:8px">
+            <a id="viewer-dl" class="btn btn-outline btn-sm" download style="display:none">
+              <svg width="14" height="14" viewBox="0 0 15 15" fill="none"><path d="M7.5 1v9M4.5 7l3 3 3-3M2 10v2.5A1.5 1.5 0 003.5 14h8a1.5 1.5 0 001.5-1.5V10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Download
+            </a>
+            <button class="btn btn-outline btn-sm" onclick="closeViewer()">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 2l10 10M12 2L2 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+              Close
+            </button>
+          </div>
+        </div>
+        <div class="viewer-frame-wrap">
+          <iframe id="viewer-iframe" title="Document viewer"></iframe>
+          <div id="viewer-fallback" class="empty-state" style="display:none;flex-direction:column;align-items:center;justify-content:center;height:100%;text-align:center;"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ══ CREDENTIALS MODAL ══ -->
+<div id="cred-modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;align-items:center;justify-content:center;" onclick="closeCredModal(event)">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-md);padding:1.75rem 2rem;width:100%;max-width:380px;margin:1rem;" onclick="event.stopPropagation()">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;">
+      <div style="font-size:16px;font-weight:600;">🔑 User Credentials</div>
+      <button onclick="closeCredModal()" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--text2);line-height:1;">&times;</button>
+    </div>
+    <div style="background:var(--amber-light);border:1px solid #FCCF5D;border-radius:var(--radius-sm);padding:.65rem .875rem;font-size:12px;color:var(--amber);margin-bottom:1.25rem;">
+      ⚠️ Keep these credentials confidential. Do not share this screen.
+    </div>
+    <div style="display:flex;flex-direction:column;gap:.75rem;">
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:.875rem 1rem;">
+        <div style="font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:.06em;color:var(--text2);margin-bottom:5px;">Username</div>
+        <div id="cred-modal-username" style="font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:500;word-break:break-all;"></div>
+      </div>
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:.875rem 1rem;">
+        <div style="font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:.06em;color:var(--text2);margin-bottom:5px;">User ID</div>
+        <div id="cred-modal-id" style="font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:500;word-break:break-all;"></div>
+      </div>
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:.875rem 1rem;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;">
+          <div style="font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:.06em;color:var(--text2);">Password</div>
+          <button onclick="toggleCredPassword()" id="cred-pass-toggle" style="background:none;border:none;cursor:pointer;font-size:11px;color:var(--accent);font-weight:500;padding:0;">Show</button>
+        </div>
+        <div id="cred-modal-password" style="font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:500;word-break:break-all;letter-spacing:.1em;"></div>
+      </div>
+    </div>
+    <button onclick="closeCredModal()" class="btn btn-outline btn-full" style="margin-top:1.25rem;">Close</button>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════
+//  SUPABASE CONFIG — fill these in
+// ════════════════════════════════
+const SUPABASE_URL = 'jxckmqvckfpqcewfcigb;       // 
+const SUPABASE_ANON_KEY = 'eu-central-1';
+const BUCKET = 'documents';
+
+let sb = null;
+let cloudReady = false;
+try {
+  if (window.supabase && SUPABASE_URL && !SUPABASE_URL.includes('YOUR_')) {
+    sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    cloudReady = true;
+  }
+} catch(e) { cloudReady = false; }
+
+// ════════════════════════════════
+//  STATE
+// ════════════════════════════════
+let state = { users: [], pdfs: [], audit: [], settings: {}, userUploads: [], adminCreds: { id: 'ADMIN', pass: 'admin' } };
+let uidCounter = 1;
+let curUser = null;
+
+const STORAGE_KEY = 'docportal_v2';      // local fallback only, used if Supabase isn't configured
+const STATE_ROW_ID = 1;                  // single shared row holding the whole app state
+let saveTimer = null;
+let applyingRemote = false;              // guards against feedback loops from realtime echo
+
+const defaultSettings = {
+  maxPdfSize: 20,
+  defaultAccess: 'view',
+  autoExpire: false,
+  defaultRole: 'viewer',
+  auditLogging: true,
+  trackDownloads: true,
+  trackViews: true,
+  sessionTimeout: 30
+};
+
+function normalizeState() {
+  if (!state.userUploads) state.userUploads = [];
+  if (!state.pdfs) state.pdfs = [];
+  if (!state.users) state.users = [];
+  if (!state.audit) state.audit = [];
+  if (!state.adminCreds) state.adminCreds = { id: 'ADMIN', pass: 'admin' };
+  if (!state.adminCreds.id) state.adminCreds.id = 'ADMIN';
+  if (!state.adminCreds.pass) state.adminCreds.pass = 'admin';
+  state.settings = { ...defaultSettings, ...state.settings };
+}
+
+// Debounced save: batches rapid changes into one network write
+function saveState() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ state, uidCounter })); } catch(e) {}
+  if (!cloudReady || applyingRemote) return;
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(pushStateToCloud, 350);
+}
+
+async function pushStateToCloud() {
+  if (!cloudReady) return;
+  try {
+    await sb.from('app_state').upsert({
+      id: STATE_ROW_ID,
+      payload: { state, uidCounter },
+      updated_at: new Date().toISOString()
+    });
+  } catch(e) { console.error('Cloud save failed', e); }
+}
+
+function loadState() {
+  try {
+    const d = localStorage.getItem(STORAGE_KEY);
+    if (d) {
+      const p = JSON.parse(d);
+      state = p.state || state;
+      uidCounter = p.uidCounter || 1;
+    }
+  } catch(e) {}
+  normalizeState();
+}
+
+async function loadStateFromCloud() {
+  if (!cloudReady) return false;
+  try {
+    const { data, error } = await sb.from('app_state').select('payload').eq('id', STATE_ROW_ID).maybeSingle();
+    if (error) throw error;
+    if (data && data.payload) {
+      applyingRemote = true;
+      state = data.payload.state || state;
+      uidCounter = data.payload.uidCounter || 1;
+      normalizeState();
+      applyingRemote = false;
+      return true;
+    }
+    // No row yet — seed one from whatever we have locally
+    await pushStateToCloud();
+    return true;
+  } catch(e) {
+    console.error('Cloud load failed, falling back to local data', e);
+    return false;
+  }
+}
+
+function subscribeToCloud() {
+  if (!cloudReady) return;
+  sb.channel('app_state_changes')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'app_state', filter: 'id=eq.' + STATE_ROW_ID }, payload => {
+      if (!payload.new || !payload.new.payload) return;
+      applyingRemote = true;
+      state = payload.new.payload.state || state;
+      uidCounter = payload.new.payload.uidCounter || 1;
+      normalizeState();
+      applyingRemote = false;
+      rerenderCurrentScreen();
+    })
+    .subscribe();
+}
+
+function rerenderCurrentScreen() {
+  if ($('s-admin').classList.contains('active')) renderAdmin();
+  else if ($('s-user').classList.contains('active') && curUser) {
+    const fresh = state.users.find(u => u.userId === curUser.userId);
+    if (fresh) { curUser = fresh; renderUserPortal(fresh); }
+  }
+}
+
+// ── Cloud file storage (Supabase Storage) ──
+// Falls back to embedding the file as a data URL when Supabase isn't configured,
+// so the app still works locally without any setup.
+async function uploadFileToCloud(file, pathPrefix) {
+  if (!cloudReady) return fileToDataUrl(file);
+  const safeName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, '_');
+  const path = pathPrefix + '/' + Date.now() + '_' + Math.random().toString(36).slice(2,8) + '_' + safeName;
+  const { error } = await sb.storage.from(BUCKET).upload(path, file, { contentType: file.type || 'application/octet-stream' });
+  if (error) throw error;
+  const { data } = sb.storage.from(BUCKET).getPublicUrl(path);
+  return { url: data.publicUrl, storagePath: path };
+}
+
+function fileToDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = e => resolve({ url: e.target.result, storagePath: null });
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+loadState();
+
+// ════════════════════════════════
+//  HELPERS
+// ════════════════════════════════
+const $ = id => document.getElementById(id);
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function pad(n) { return String(n).padStart(4,'0'); }
+function initials(name) {
+  return (name||'?').split(/[\s_\-\.]+/).map(w => w[0]||'').join('').toUpperCase().slice(0,2) || '??';
+}
+function fmtSize(bytes) {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1048576) return (bytes/1024).toFixed(1) + ' KB';
+  return (bytes/1048576).toFixed(1) + ' MB';
+}
+function fmtDate(ts) {
+  return new Date(ts).toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' });
+}
+function fmtDateTime(ts) {
+  const d = new Date(ts);
+  return d.toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' }) + ' ' + 
+         d.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
+}
+function showEl(id, show) { $(id).style.display = show ? 'block' : 'none'; }
+function showAlert(id, msg, type) {
+  const el = $(id);
+  el.className = 'alert alert-' + type;
+  el.textContent = msg;
+  el.style.display = 'block';
+  if (type !== 'err') setTimeout(() => { el.style.display = 'none'; }, 4000);
+}
+
+function logAudit(action, details) {
+  if (!state.settings.auditLogging) return;
+  const ts = Date.now();
+  state.audit.push({
+    id: ts + '_' + Math.random().toString(36).slice(2,7),
+    ts,
+    action,
+    details,
+    user: curUser ? curUser.username : 'admin'
+  });
+  if (state.audit.length > 500) state.audit = state.audit.slice(-500);
+  saveState();
+}
+
+function toggleCollapsible(el) {
+  el.classList.toggle('open');
+}
+
+// ════════════════════════════════
+//  SCREENS
+// ════════════════════════════════
+function show(id) {
+  ['s-login','s-admin','s-user'].forEach(s => {
+    $(s).classList.toggle('active', s === id);
+  });
+  window.scrollTo(0,0);
+}
+
+// ════════════════════════════════
+//  LOGIN
+// ════════════════════════════════
+function doLogin() {
+  const id   = ($('li-id').value || '').trim();
+  const pass = ($('li-pass').value || '').trim();
+  $('li-err').style.display = 'none';
+
+  if (!id || !pass) { showAlert('li-err','Please enter your User ID and username.','err'); return; }
+
+  if (id === state.adminCreds.id && pass === state.adminCreds.pass) {
+    curUser = null;
+    logAudit('ADMIN_LOGIN', { method: 'manual' });
+    renderAdmin();
+    show('s-admin');
+    return;
+  }
+
+  const u = state.users.find(u => u.userId === id && u.password === pass);
+  if (!u) { showAlert('li-err','Invalid ID or username. Please check your credentials.','err'); return; }
+  if (!u.active) { showAlert('li-err','This account is inactive. Please contact your administrator.','err'); return; }
+
+  curUser = u;
+  logAudit('USER_LOGIN', { userId: u.userId, username: u.username });
+  renderUserPortal(u);
+  show('s-user');
+}
+
+// Enter key on login
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && $('s-login').classList.contains('active')) doLogin();
+});
+
+function logout() {
+  if (curUser) logAudit('USER_LOGOUT', { userId: curUser.userId });
+  curUser = null;
+  $('li-id').value = '';
+  $('li-pass').value = '';
+  $('li-err').style.display = 'none';
+  closeViewer();
+  show('s-login');
+}
+
+// ════════════════════════════════
+//  ADMIN — TABS
+// ════════════════════════════════
+function adminTab(el, panelId) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  ['p-pdfs','p-users','p-inbox','p-audit','p-settings'].forEach(p => $(p).classList.toggle('active', p === panelId));
+  if (panelId === 'p-inbox') renderInbox();
+  if (panelId === 'p-settings') loadSettingsExtra();
+}
+
+// ════════════════════════════════
+//  ADMIN — RENDER
+// ════════════════════════════════
+function renderAdmin() {
+  if ($('admin-topbar-id')) $('admin-topbar-id').textContent = state.adminCreds.id;
+  const totalAssigns = state.pdfs.reduce((s,p) => s + p.assignedTo.length, 0);
+  const totalViews = state.audit.filter(a => a.action === 'PDF_VIEW').length;
+  $('stat-users').textContent = state.users.length;
+  $('stat-pdfs').textContent  = state.pdfs.length;
+  $('stat-assigns').textContent = totalAssigns;
+  $('stat-views').textContent = totalViews;
+  renderPdfList();
+  renderUserList();
+  renderAuditLog();
+  renderAssignSelect();
+  renderInbox();
+  loadSettings();
+  // inbox badge
+  const unread = state.userUploads.filter(u => !u.read).length;
+  const badge = $('inbox-badge');
+  if (unread > 0) { badge.textContent = unread; badge.style.display = 'inline'; }
+  else { badge.style.display = 'none'; }
+}
+
+function renderAssignSelect() {
+  const sel = $('pdf-assign');
+  sel.innerHTML = '';
+  if (!state.users.length) {
+    sel.innerHTML = '<option disabled>No users yet — create users first</option>';
+    return;
+  }
+  state.users.filter(u => u.active).forEach(u => {
+    const o = document.createElement('option');
+    o.value = u.userId;
+    o.textContent = u.username + '  (' + u.userId + ')';
+    sel.appendChild(o);
+  });
+}
+
+function renderPdfList() {
+  const el = $('pdf-list');
+  $('pdf-count-label').textContent = state.pdfs.length + ' document' + (state.pdfs.length===1?'':'s');
+  if (!state.pdfs.length) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon">📄</div>No PDFs uploaded yet. Upload one above.</div>';
+    return;
+  }
+  el.innerHTML = state.pdfs.map((p, i) => {
+    const assigned = p.assignedTo.map(uid => {
+      const u = state.users.find(u => u.userId === uid);
+      return u ? `<span class="chip">${esc(u.username)}</span>` : '';
+    }).join('');
+    const expired = p.expireDate && new Date(p.expireDate) < new Date();
+    const expiryStatus = expired ? '<span class="chip red">Expired</span>' : 
+                         p.expireDate ? `<span class="chip amber">Expires ${fmtDate(p.expireDate)}</span>` : '';
+    const kind = detectFileKind(p.filename);
+    return `
+    <div class="list-row">
+      <div class="list-left">
+        <div class="pdf-icon ${kind.cls}">${kind.label}</div>
+        <div style="min-width:0">
+          <div class="doc-name">${esc(p.title)}</div>
+          <div class="doc-meta">${esc(p.filename)} &bull; ${p.size} &bull; ${p.category} &bull; Uploaded ${fmtDate(p.ts)}</div>
+          <div class="chips">
+            ${assigned || '<span class="chip gray">Unassigned</span>'}
+            ${expiryStatus}
+            <span class="chip blue">${p.access === 'download' ? '📥 Download' : '👁 View'}</span>
+          </div>
+        </div>
+      </div>
+      <div class="list-right">
+        <button class="btn btn-danger btn-sm" onclick="deletePdf(${i})" title="Delete">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 3.5h10M5.5 3.5V2h3v1.5M4 3.5l.7 8h4.6l.7-8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Delete
+        </button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderUserList() {
+  const el = $('user-list');
+  $('user-count-label').textContent = state.users.length + ' user' + (state.users.length===1?'':'s');
+  if (!state.users.length) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon">👥</div>No users generated yet.</div>';
+    return;
+  }
+  el.innerHTML = state.users.map((u, i) => {
+    const docCount = state.pdfs.filter(p => p.assignedTo.includes(u.userId)).length;
+    const roleColors = { viewer: 'gray', editor: 'blue', manager: 'amber' };
+    return `
+    <div class="list-row">
+      <div class="list-left">
+        <div class="avatar lg" style="background:${avatarColor(u.username)}">${esc(initials(u.username))}</div>
+        <div>
+          <div style="font-weight:500;font-size:14px">${esc(u.username)}</div>
+          <div class="doc-meta">
+            ID: <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:500">${esc(u.userId)}</span>
+            ${u.dept ? ' &bull; ' + esc(u.dept) : ''}
+            &bull; Created ${fmtDate(u.ts)}
+          </div>
+          <div class="chips">
+            <span class="chip ${roleColors[u.role]}">${u.role}</span>
+            <span class="chip">${u.active ? '✓ Active' : '⊘ Inactive'}</span>
+          </div>
+        </div>
+      </div>
+      <div class="list-right">
+        <span class="chip">${docCount} doc${docCount===1?'':'s'}</span>
+        <button class="btn btn-outline btn-sm" onclick="viewUserCredentials('${esc(u.userId)}','${esc(u.username)}','${esc(u.password)}')" title="View credentials">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><ellipse cx="7" cy="7" rx="6" ry="4" stroke="currentColor" stroke-width="1.3"/><circle cx="7" cy="7" r="1.8" fill="currentColor"/></svg>
+          Credentials
+        </button>
+        <button class="btn btn-outline btn-sm" onclick="toggleUserStatus(${i})" title="Toggle status">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6" stroke="currentColor" stroke-width="1.3" fill="none"/><path d="M5 7l1.5 1.5 2.5-3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <button class="btn btn-danger btn-sm" onclick="deleteUser(${i})" title="Delete user">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 3.5h10M5.5 3.5V2h3v1.5M4 3.5l.7 8h4.6l.7-8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Delete
+        </button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderAuditLog() {
+  const el = $('audit-list');
+  if (!state.audit.length) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon">📋</div>No activity recorded yet.</div>';
+    return;
+  }
+  // Ensure every entry has an id
+  state.audit.forEach((a, i) => { if (!a.id) a.id = i + '_' + a.ts; });
+  const recentAudit = state.audit.slice(-50).reverse();
+  const icons = {
+    'ADMIN_LOGIN': '🔓', 'USER_LOGIN': '🔓', 'USER_LOGOUT': '🔐',
+    'PDF_UPLOAD': '📤', 'PDF_DELETE': '🗑', 'PDF_VIEW': '👁',
+    'PDF_DOWNLOAD': '📥', 'USER_CREATE': '👤', 'USER_DELETE': '🗑',
+    'USER_STATUS_CHANGE': '⚙', 'AUDIT_LOG_CLEARED': '🧹',
+    'ADMIN_PASSWORD_CHANGED': '🔑', 'ADMIN_CREDS_CHANGED': '🔑',
+    'SETTINGS_SAVED': '⚙', 'ADMIN_VIEW_CREDENTIALS': '👁'
+  };
+  el.innerHTML = recentAudit.map(a => `
+    <div class="list-row" id="audit-row-${a.id}">
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:500">${icons[a.action] || '📌'} ${a.action}</div>
+        <div class="doc-meta">${esc(a.user)} &bull; ${fmtDateTime(a.ts)}</div>
+        ${a.details ? '<div class="doc-meta" style="color:var(--text3)">' + JSON.stringify(a.details).slice(0,80) + '</div>' : ''}
+      </div>
+      <div class="list-right">
+        <button class="btn btn-danger btn-sm" title="Remove this entry" onclick="deleteAuditEntry('${a.id}')">
+          <svg width="13" height="13" viewBox="0 0 15 15" fill="none"><path d="M3 3.5h9M5.5 3.5V2.5a.5.5 0 01.5-.5h3a.5.5 0 01.5.5v1M6 6.5v4M9 6.5v4M4 3.5l.5 8.5a1 1 0 001 1h4a1 1 0 001-1L11 3.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Remove
+        </button>
+      </div>
+    </div>`).join('');
+}
+
+function deleteAuditEntry(id) {
+  state.audit = state.audit.filter(a => String(a.id) !== String(id));
+  saveState();
+  renderAuditLog();
+}
+
+function avatarColor(name) {
+  const colors = ['#1A56A0','#2D6A4F','#8B2FC9','#C0392B','#B45309','#0E7490'];
+  let h = 0;
+  for (let i=0; i<(name||'').length; i++) h = (h*31 + name.charCodeAt(i)) & 0xFFFFFF;
+  return colors[h % colors.length];
+}
+
+// ════════════════════════════════
+//  ADMIN — ACTIONS
+// ════════════════════════════════
+function genUser() {
+  const name = ($('nu-name').value || '').trim();
+  const role = $('nu-role').value;
+  const dept = ($('nu-dept').value || '').trim();
+  const active = $('nu-active').checked;
+  $('nu-err').style.display = 'none';
+  $('nu-cred').style.display = 'none';
+
+  if (!name) { showAlert('nu-err','Username is required.','err'); return; }
+  if (!/^[a-zA-Z0-9_\-\.]+$/.test(name)) {
+    showAlert('nu-err','Username may only contain letters, numbers, underscores, hyphens, or dots.','err'); return;
+  }
+  if (state.users.find(u => u.username.toLowerCase() === name.toLowerCase())) {
+    showAlert('nu-err','That username already exists. Please choose a different one.','err'); return;
+  }
+
+  const userId = ($('nu-userid').value||'').trim(); const password = ($('nu-password').value||'').trim(); if(!userId||!password){showAlert('nu-err','User ID and Password required.','err'); return;}
+  const u = { userId, password, username: name, role, dept, active, ts: Date.now() };
+  state.users.push(u);
+  saveState();
+  logAudit('USER_CREATE', { userId, username: name, role, active });
+
+  $('nu-name').value = '';
+  $('nu-role').value = 'viewer';
+  $('nu-dept').value = '';
+  $('nu-active').checked = true;
+  $('cred-id').textContent   = userId;
+  $('cred-name').textContent = name;
+  $('cred-role').textContent = role;
+  $('nu-cred').style.display = 'block';
+  renderAdmin();
+}
+
+function toggleUserStatus(i) {
+  const u = state.users[i];
+  u.active = !u.active;
+  saveState();
+  logAudit('USER_STATUS_CHANGE', { userId: u.userId, newStatus: u.active ? 'active' : 'inactive' });
+  renderUserList();
+}
+
+function deleteUser(i) {
+  const u = state.users[i];
+  if (!confirm('Delete user "' + u.username + '" (' + u.userId + ')?\n\nThis will remove their access to all assigned documents.')) return;
+  state.pdfs.forEach(p => { p.assignedTo = p.assignedTo.filter(id => id !== u.userId); });
+  state.users.splice(i, 1);
+  saveState();
+  logAudit('USER_DELETE', { userId: u.userId, username: u.username });
+  renderAdmin();
+}
+
+// ── File-type detection for icons/labels ──
+function detectFileKind(filename) {
+  const ext = (filename.split('.').pop() || '').toLowerCase();
+  if (ext === 'pdf') return { cls: '', label: 'PDF' };
+  if (['xls','xlsx','csv'].includes(ext)) return { cls: 'file-xls', label: ext.toUpperCase() };
+  if (['doc','docx'].includes(ext)) return { cls: 'file-doc', label: ext.toUpperCase() };
+  if (['ppt','pptx'].includes(ext)) return { cls: 'file-ppt', label: ext.toUpperCase() };
+  if (['jpg','jpeg','png','gif','webp'].includes(ext)) return { cls: 'file-img', label: 'IMG' };
+  if (['zip'].includes(ext)) return { cls: 'file-zip', label: 'ZIP' };
+  if (['txt'].includes(ext)) return { cls: 'file-txt', label: 'TXT' };
+  return { cls: 'file-txt', label: ext ? ext.toUpperCase().slice(0,4) : 'FILE' };
+}
+
+// ── Live preview list under a file input ──
+function previewSelectedFiles(inputId, previewId) {
+  const input = $(inputId);
+  const el = $(previewId);
+  const files = Array.from(input.files || []);
+  if (!files.length) { el.innerHTML = ''; return; }
+  el.innerHTML = files.map(f => `
+    <div class="ufl-row">
+      <span class="ufl-name">${esc(f.webkitRelativePath || f.name)}</span>
+      <span class="ufl-size">${fmtSize(f.size)}</span>
+    </div>`).join('');
+}
+
+function setUploadProgress(msg) {
+  const el = $('pdf-progress');
+  if (!msg) { el.style.display = 'none'; return; }
+  el.style.display = 'block';
+  el.textContent = msg;
+}
+
+async function uploadPdf() {
+  const title = ($('pdf-title').value || '').trim();
+  const category = $('pdf-category').value;
+  const tags = ($('pdf-tags').value || '').trim().split(',').map(t => t.trim()).filter(t => t);
+  const filesInput  = Array.from($('pdf-file').files || []);
+  const folderInput = Array.from($('folder-upload').files || []);
+  const sel   = $('pdf-assign');
+  const assigned = Array.from(sel.selectedOptions).map(o => o.value);
+  const access = $('pdf-access').value;
+  const expireDate = $('pdf-expire').value || null;
+  $('pdf-err').style.display = 'none';
+  $('pdf-ok').style.display  = 'none';
+
+  if (!title) { showAlert('pdf-err','Please enter a document title.','err'); return; }
+  if (!filesInput.length && !folderInput.length) {
+    showAlert('pdf-err','Please select one or more files, or a folder, to upload.','err'); return;
+  }
+
+  const maxSize = (state.settings.maxPdfSize || 20) * 1024 * 1024;
+  const btn = $('pdf-upload-btn');
+  btn.disabled = true;
+  btn.style.opacity = '.6';
+
+  try {
+    const newDocs = [];
+
+    // ── Case 1: a folder was selected — zip everything into one document ──
+    if (folderInput.length) {
+      setUploadProgress('Zipping folder (' + folderInput.length + ' file' + (folderInput.length===1?'':'s') + ')…');
+      const zip = new JSZip();
+      let totalBytes = 0;
+      folderInput.forEach(f => { zip.file(f.webkitRelativePath || f.name, f); totalBytes += f.size; });
+      if (totalBytes > maxSize) {
+        throw new Error('Folder contents total ' + fmtSize(totalBytes) + ', which exceeds the ' + state.settings.maxPdfSize + ' MB limit.');
+      }
+      const zipBlob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE' });
+      const rootName = (folderInput[0].webkitRelativePath || '').split('/')[0] || 'folder';
+      const zipFile = new File([zipBlob], rootName + '.zip', { type: 'application/zip' });
+
+      setUploadProgress('Uploading ' + zipFile.name + '…');
+      const uploaded = await uploadFileToCloud(zipFile, 'admin-docs');
+      newDocs.push({
+        id: Date.now() + Math.floor(Math.random()*1000),
+        title: title + ' (folder)',
+        category, tags,
+        filename: zipFile.name,
+        size: fmtSize(zipFile.size),
+        ts: Date.now(),
+        expireDate: expireDate ? new Date(expireDate).getTime() : null,
+        access, assignedTo: assigned,
+        data: uploaded.url,
+        storagePath: uploaded.storagePath,
+        kind: 'zip',
+        views: 0, downloads: 0
+      });
+    }
+
+    // ── Case 2: one or more individual files ──
+    for (let i = 0; i < filesInput.length; i++) {
+      const file = filesInput[i];
+      if (file.size > maxSize) {
+        throw new Error('"' + file.name + '" is ' + fmtSize(file.size) + ', which exceeds the ' + state.settings.maxPdfSize + ' MB limit.');
+      }
+      setUploadProgress('Uploading ' + (i+1) + ' of ' + filesInput.length + ': ' + file.name + '…');
+      const uploaded = await uploadFileToCloud(file, 'admin-docs');
+      const kind = detectFileKind(file.name);
+      newDocs.push({
+        id: Date.now() + i + Math.floor(Math.random()*1000),
+        title: filesInput.length > 1 ? title + ' — ' + file.name : title,
+        category, tags,
+        filename: file.name,
+        size: fmtSize(file.size),
+        ts: Date.now(),
+        expireDate: expireDate ? new Date(expireDate).getTime() : null,
+        access, assignedTo: assigned,
+        data: uploaded.url,
+        storagePath: uploaded.storagePath,
+        kind: kind.label.toLowerCase(),
+        views: 0, downloads: 0
+      });
+    }
+
+    state.pdfs.push(...newDocs);
+    saveState();
+
+    $('pdf-title').value = '';
+    $('pdf-category').value = 'general';
+    $('pdf-tags').value = '';
+    $('pdf-file').value  = '';
+    $('folder-upload').value = '';
+    $('pdf-file-preview').innerHTML = '';
+    $('folder-file-preview').innerHTML = '';
+    $('pdf-access').value = 'view';
+    $('pdf-expire').value = '';
+    Array.from(sel.options).forEach(o => o.selected = false);
+    logAudit('PDF_UPLOAD', { title, category, assigned: assigned.length, count: newDocs.length });
+    showAlert('pdf-ok', '✓ ' + newDocs.length + ' file(s) uploaded and assigned to ' + (assigned.length || 0) + ' user(s).', 'ok');
+    renderAdmin();
+  } catch (err) {
+    console.error(err);
+    showAlert('pdf-err', err.message || 'Upload failed. Please try again.', 'err');
+  } finally {
+    setUploadProgress(null);
+    btn.disabled = false;
+    btn.style.opacity = '';
+  }
+}
+
+async function deletePdf(i) {
+  const p = state.pdfs[i];
+  if (!confirm('Delete "' + p.title + '"?\n\nThis will remove it from all users.')) return;
+  logAudit('PDF_DELETE', { title: p.title });
+  if (cloudReady && p.storagePath) {
+    try { await sb.storage.from(BUCKET).remove([p.storagePath]); } catch(e) { console.error('Cloud file delete failed', e); }
+  }
+  state.pdfs.splice(i, 1);
+  saveState();
+  renderAdmin();
+}
+
+function loadSettings() {
+  $('set-max-size').value = state.settings.maxPdfSize || 20;
+  $('set-default-access').value = state.settings.defaultAccess || 'view';
+  $('set-auto-expire').checked = state.settings.autoExpire || false;
+  $('set-default-role').value = state.settings.defaultRole || 'viewer';
+  $('set-audit-logging').checked = state.settings.auditLogging !== false;
+  $('set-track-downloads').checked = state.settings.trackDownloads !== false;
+  $('set-track-views').checked = state.settings.trackViews !== false;
+  $('set-session-timeout').value = state.settings.sessionTimeout || 30;
+}
+
+function saveSettings() {
+  state.settings.maxPdfSize = parseInt($('set-max-size').value) || 20;
+  state.settings.defaultAccess = $('set-default-access').value;
+  state.settings.autoExpire = $('set-auto-expire').checked;
+  state.settings.defaultRole = $('set-default-role').value;
+  state.settings.auditLogging = $('set-audit-logging').checked;
+  state.settings.trackDownloads = $('set-track-downloads').checked;
+  state.settings.trackViews = $('set-track-views').checked;
+  state.settings.sessionTimeout = parseInt($('set-session-timeout').value) || 30;
+  saveState();
+  logAudit('SETTINGS_SAVED', {});
+  showAlert('pdf-ok', '✓ Settings saved successfully.', 'ok');
+}
+
+// ════════════════════════════════
+//  USER PORTAL
+// ════════════════════════════════
+function renderUserPortal(u) {
+  const col = avatarColor(u.username);
+  const ini = initials(u.username);
+
+  // topbar
+  $('u-avatar').textContent = ini;
+  $('u-avatar').style.background = col;
+  $('u-topbar-name').textContent = u.username;
+
+  // banner
+  $('u-banner-avatar').textContent = ini;
+  $('u-banner-avatar').style.background = 'rgba(255,255,255,.25)';
+  $('u-welcome-name').textContent = 'Welcome, ' + u.username;
+  $('u-welcome-id').textContent = 'User ID: ' + u.userId + ' · ' + u.role + (u.dept ? ' · ' + u.dept : '');
+
+  // profile picture
+  loadProfilePic();
+
+  const now = new Date().getTime();
+  const myDocs = state.pdfs.filter(p => p.assignedTo.includes(u.userId) && (!p.expireDate || p.expireDate > now));
+  $('u-doc-count').textContent = myDocs.length + ' document' + (myDocs.length===1?'':'s') + ' available';
+
+  const el = $('user-doc-list');
+  if (!myDocs.length) {
+    el.innerHTML = `<div class="card"><div class="empty-state"><div class="empty-icon">📭</div>No documents have been assigned to you yet.<br>Please check back later or contact your administrator.</div></div>`;
+    return;
+  }
+
+  el.innerHTML = myDocs.map(p => {
+    const kind = detectFileKind(p.filename);
+    return `
+    <div class="doc-card">
+      <div class="doc-card-inner">
+        <div class="doc-card-left">
+          <div class="pdf-icon ${kind.cls}">${kind.label}</div>
+          <div style="min-width:0">
+            <div class="doc-name">${esc(p.title)}</div>
+            <div class="doc-meta">${esc(p.filename)} &bull; ${p.size} &bull; ${p.category} &bull; ${fmtDate(p.ts)}</div>
+            ${p.tags.length ? `<div class="chips">${p.tags.map(t => `<span class="chip gray">${esc(t)}</span>`).join('')}</div>` : ''}
+          </div>
+        </div>
+        <div class="doc-card-actions">
+          <button class="btn btn-outline btn-sm" onclick="viewPdf(${p.id})">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><ellipse cx="7" cy="7" rx="6" ry="4" stroke="currentColor" stroke-width="1.3"/><circle cx="7" cy="7" r="1.8" fill="currentColor"/></svg>
+            View
+          </button>
+          ${p.access === 'download' ? `<a class="btn btn-primary btn-sm" href="${p.data}" download="${esc(p.filename)}" onclick="downloadPdf(${p.id})">
+            <svg width="14" height="14" viewBox="0 0 15 15" fill="none"><path d="M7.5 1v9M4.5 7l3 3 3-3M2 10v2.5A1.5 1.5 0 003.5 14h8a1.5 1.5 0 001.5-1.5V10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Download
+          </a>` : ''}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  closeViewer();
+  renderUserSentList();
+}
+
+function viewPdf(id) {
+  const p = state.pdfs.find(x => x.id === id);
+  if (!p) return;
+  $('viewer-title').textContent = p.title;
+
+  const ext = (p.filename.split('.').pop() || '').toLowerCase();
+  const iframe = $('viewer-iframe');
+  const fallback = $('viewer-fallback');
+
+  if (ext === 'pdf' || ['jpg','jpeg','png','gif','webp'].includes(ext) || ext === 'txt') {
+    // Natively renderable in a browser
+    fallback.style.display = 'none';
+    iframe.style.display = 'block';
+    iframe.src = p.data;
+  } else if (['doc','docx','xls','xlsx','ppt','pptx'].includes(ext) && /^https?:\/\//.test(p.data)) {
+    // Office files: only Microsoft's online viewer can render these, and it requires
+    // a public https URL — works once this is hosted with Supabase Storage, not on a data: URL
+    fallback.style.display = 'none';
+    iframe.style.display = 'block';
+    iframe.src = 'https://view.officeapps.live.com/op/embed.aspx?src=' + encodeURIComponent(p.data);
+  } else {
+    // zip, or Office files without a public URL (local-only mode): can't preview inline
+    iframe.style.display = 'none';
+    iframe.src = '';
+    fallback.style.display = 'flex';
+    fallback.innerHTML = `<div class="empty-icon">📦</div><p>This file type can't be previewed in the browser.<br>Use Download to open it on your device.</p>`;
+  }
+
+  if (p.access === 'download') {
+    $('viewer-dl').href = p.data;
+    $('viewer-dl').download = p.filename;
+    $('viewer-dl').style.display = 'inline-flex';
+  } else {
+    $('viewer-dl').style.display = 'none';
+  }
+  showEl('viewer-wrap', true);
+  p.views = (p.views || 0) + 1;
+  saveState();
+  if (state.settings.trackViews) {
+    logAudit('PDF_VIEW', { pdfId: p.id, title: p.title });
+  }
+  setTimeout(() => $('viewer-wrap').scrollIntoView({ behavior:'smooth', block:'start' }), 50);
+}
+
+function downloadPdf(id) {
+  const p = state.pdfs.find(x => x.id === id);
+  if (p && state.settings.trackDownloads) {
+    p.downloads = (p.downloads || 0) + 1;
+    saveState();
+    logAudit('PDF_DOWNLOAD', { pdfId: p.id, title: p.title });
+  }
+}
+
+function closeViewer() {
+  showEl('viewer-wrap', false);
+  $('viewer-iframe').src = '';
+  $('viewer-fallback').style.display = 'none';
+}
+// ════════════════════════════════
+//  USER — UPLOAD FILES TO ADMIN
+// ════════════════════════════════
+async function uploadUserFiles() {
+  if (!curUser) return;
+  const title = ($('user-upload-title').value || '').trim();
+  const file  = $('user-upload').files[0];
+  $('user-upload-err').style.display = 'none';
+  $('user-upload-ok').style.display  = 'none';
+
+  if (!title) { showAlert('user-upload-err', 'Please enter a title or description for your file.', 'err'); return; }
+  if (!file)  { showAlert('user-upload-err', 'Please select a file to send.', 'err'); return; }
+  if (file.size > 20 * 1024 * 1024) { showAlert('user-upload-err', 'File too large — max 20 MB.', 'err'); return; }
+
+  const btn = document.activeElement;
+  try {
+    showAlert('user-upload-ok', 'Uploading…', 'ok');
+    const uploaded = await uploadFileToCloud(file, 'user-uploads/' + curUser.userId);
+    const isImage = file.type.startsWith('image/');
+    const upload = {
+      id: Date.now(),
+      title,
+      filename: file.name,
+      size: fmtSize(file.size),
+      ts: Date.now(),
+      fromUserId: curUser.userId,
+      fromUsername: curUser.username,
+      fileType: isImage ? 'image' : (file.name.toLowerCase().endsWith('.pdf') ? 'pdf' : 'file'),
+      data: uploaded.url,
+      storagePath: uploaded.storagePath,
+      read: false
+    };
+    state.userUploads.push(upload);
+    saveState();
+    logAudit('USER_FILE_UPLOAD', { title, filename: file.name, userId: curUser.userId });
+    $('user-upload-title').value = '';
+    $('user-upload').value = '';
+    showAlert('user-upload-ok', '✓ "' + title + '" sent to admin successfully.', 'ok');
+    renderUserSentList();
+  } catch (err) {
+    console.error(err);
+    showAlert('user-upload-err', 'Failed to send file. Please try again.', 'err');
+  }
+}
+
+function renderUserSentList() {
+  const myUploads = state.userUploads.filter(u => u.fromUserId === (curUser && curUser.userId));
+  const wrap = $('user-sent-wrap');
+  const el   = $('user-sent-list');
+  if (!myUploads.length) { wrap.style.display = 'none'; return; }
+  wrap.style.display = 'block';
+  el.innerHTML = myUploads.slice().reverse().map(u => `
+    <div style="display:flex;align-items:center;gap:10px;padding:.5rem 0;border-bottom:1px solid var(--border);font-size:13px">
+      <span style="font-size:18px">${u.fileType==='image'?'🖼️':u.fileType==='pdf'?'📄':'📎'}</span>
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:500">${esc(u.title)}</div>
+        <div style="color:var(--text2)">${esc(u.filename)} · ${u.size} · ${fmtDate(u.ts)}</div>
+      </div>
+      <span style="color:var(--accent);font-size:11px;font-weight:500">Sent ✓</span>
+    </div>`).join('');
+}
+
+// ════════════════════════════════
+//  ADMIN — INBOX (user uploads)
+// ════════════════════════════════
+function renderInbox() {
+  const el = $('inbox-list');
+  const uploads = state.userUploads.slice().reverse();
+  $('inbox-count-label').textContent = uploads.length + ' file' + (uploads.length===1?'':'s');
+  if (!uploads.length) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon">📥</div>No files received from users yet.</div>';
+    return;
+  }
+  el.innerHTML = uploads.map((u, i) => {
+    const icon = u.fileType==='image' ? '🖼️' : u.fileType==='pdf' ? '📄' : '📎';
+    const previewBtn = (u.fileType==='image' || u.fileType==='pdf')
+      ? `<button class="btn btn-outline btn-sm" onclick="previewInboxFile(${u.id})">👁 Preview</button>` : '';
+    return `
+    <div class="list-row" id="inbox-row-${u.id}">
+      <div class="list-left">
+        <div style="font-size:24px;flex-shrink:0">${icon}</div>
+        <div style="min-width:0">
+          <div class="doc-name">${esc(u.title)} ${!u.read ? '<span class="chip" style="background:var(--accent);color:#fff;font-size:10px">New</span>' : ''}</div>
+          <div class="doc-meta">From: <strong>${esc(u.fromUsername)}</strong> (${esc(u.fromUserId)}) · ${esc(u.filename)} · ${u.size} · ${fmtDate(u.ts)}</div>
+        </div>
+      </div>
+      <div class="list-right">
+        ${previewBtn}
+        <a class="btn btn-outline btn-sm" href="${u.data}" download="${esc(u.filename)}">📥 Download</a>
+        <button class="btn btn-danger btn-sm" onclick="deleteInboxFile(${u.id})">🗑 Delete</button>
+      </div>
+    </div>`;
+  }).join('');
+  // mark all as read
+  state.userUploads.forEach(u => u.read = true);
+  saveState();
+  const badge = $('inbox-badge');
+  if (badge) badge.style.display = 'none';
+}
+
+function previewInboxFile(id) {
+  const u = state.userUploads.find(x => x.id === id);
+  if (!u) return;
+  const win = window.open('', '_blank');
+  if (u.fileType === 'image') {
+    win.document.write(`<html><body style="margin:0;background:#111;display:flex;align-items:center;justify-content:center;min-height:100vh"><img src="${u.data}" style="max-width:100%;max-height:100vh;object-fit:contain" /></body></html>`);
+  } else {
+    win.document.write(`<html><body style="margin:0"><iframe src="${u.data}" style="width:100vw;height:100vh;border:none"></iframe></body></html>`);
+  }
+}
+
+async function deleteInboxFile(id) {
+  if (!confirm('Delete this file from inbox?')) return;
+  const u = state.userUploads.find(x => x.id === id);
+  if (cloudReady && u && u.storagePath) {
+    try { await sb.storage.from(BUCKET).remove([u.storagePath]); } catch(e) { console.error('Cloud file delete failed', e); }
+  }
+  state.userUploads = state.userUploads.filter(u => u.id !== id);
+  saveState();
+  renderInbox();
+  renderAdmin();
+}
+
+// ════════════════════════════════
+//  ADMIN — VIEW USER CREDENTIALS
+// ════════════════════════════════
+let _credPassVisible = false;
+let _credPassValue = '';
+
+function viewUserCredentials(userId, username, password) {
+  _credPassVisible = false;
+  _credPassValue = password;
+  const overlay = $('cred-modal-overlay');
+  $('cred-modal-username').textContent = username;
+  $('cred-modal-id').textContent = userId;
+  $('cred-modal-password').textContent = '••••••••';
+  $('cred-pass-toggle').textContent = 'Show';
+  overlay.style.display = 'flex';
+  logAudit('ADMIN_VIEW_CREDENTIALS', { userId, username });
+}
+
+function toggleCredPassword() {
+  _credPassVisible = !_credPassVisible;
+  $('cred-modal-password').textContent = _credPassVisible ? _credPassValue : '••••••••';
+  $('cred-pass-toggle').textContent = _credPassVisible ? 'Hide' : 'Show';
+}
+
+function closeCredModal(e) {
+  if (e && e.target !== $('cred-modal-overlay')) return;
+  $('cred-modal-overlay').style.display = 'none';
+  _credPassVisible = false;
+  _credPassValue = '';
+}
+
+// ════════════════════════════════
+//  ADMIN — CHANGE CREDENTIALS
+// ════════════════════════════════
+function changeAdminCredentials() {
+  const newId   = ($('new-admin-id').value   || '').trim();
+  const newPass = ($('new-admin-pass').value  || '').trim();
+  const newPass2= ($('new-admin-pass2').value || '').trim();
+  const curPass = ($('current-admin-pass').value || '').trim();
+
+  $('admin-cred-err').style.display = 'none';
+  $('admin-cred-ok').style.display  = 'none';
+
+  if (!curPass) { showAlert('admin-cred-err', 'Please enter your current password to confirm changes.', 'err'); return; }
+  if (curPass !== state.adminCreds.pass) { showAlert('admin-cred-err', 'Current password is incorrect.', 'err'); return; }
+  if (!newId && !newPass) { showAlert('admin-cred-err', 'Please enter a new ID or new password to update.', 'err'); return; }
+  if (newPass && newPass !== newPass2) { showAlert('admin-cred-err', 'New passwords do not match.', 'err'); return; }
+  if (newId && newId.length < 3) { showAlert('admin-cred-err', 'Admin ID must be at least 3 characters.', 'err'); return; }
+  if (newPass && newPass.length < 4) { showAlert('admin-cred-err', 'New password must be at least 4 characters.', 'err'); return; }
+
+  if (newId)   state.adminCreds.id   = newId;
+  if (newPass) state.adminCreds.pass = newPass;
+  saveState();
+  logAudit('ADMIN_CREDS_CHANGED', { idChanged: !!newId, passChanged: !!newPass });
+
+  $('new-admin-id').value    = '';
+  $('new-admin-pass').value  = '';
+  $('new-admin-pass2').value = '';
+  $('current-admin-pass').value = '';
+
+  // Reset show/hide buttons
+  ['tog-new','tog-new2','tog-cur'].forEach(id => {
+    const btn = $(id);
+    if (btn) btn.textContent = 'Show';
+  });
+  ['new-admin-pass','new-admin-pass2','current-admin-pass'].forEach(id => {
+    const inp = $(id);
+    if (inp) inp.type = 'password';
+  });
+
+  // Update displayed current ID
+  const disp = $('current-admin-id-display');
+  if (disp) disp.textContent = state.adminCreds.id;
+  if ($('admin-topbar-id')) $('admin-topbar-id').textContent = state.adminCreds.id;
+
+  showAlert('admin-cred-ok', '✓ Credentials updated. Active ID: ' + state.adminCreds.id, 'ok');
+}
+
+// ── Show/Hide password toggle for admin credential fields ──
+function toggleAdminPassVis(inputId, btnId) {
+  const inp = $(inputId);
+  const btn = $(btnId);
+  if (!inp || !btn) return;
+  const isHidden = inp.type === 'password';
+  inp.type = isHidden ? 'text' : 'password';
+  btn.textContent = isHidden ? 'Hide' : 'Show';
+}
+
+// ── Populate current admin ID display when settings tab opens ──
+function loadSettingsExtra() {
+  const disp = $('current-admin-id-display');
+  if (disp) disp.textContent = state.adminCreds.id;
+}
+
+// ════════════════════════════════
+//  USER — PROFILE PICTURE
+// ════════════════════════════════
+function getProfilePicKey() {
+  return curUser ? 'profile_pic_' + curUser.userId : null;
+}
+
+function loadProfilePic() {
+  const key = getProfilePicKey();
+  if (!key) return;
+  const data = localStorage.getItem(key);
+  applyProfilePic(data);
+}
+
+function applyProfilePic(dataUrl) {
+  const img = $('profile-avatar-img');
+  const ini = $('profile-avatar-initials');
+  const removeBtn = $('profile-pic-remove');
+  const topbarAvatar = $('u-avatar');
+  const bannerAvatar = $('u-banner-avatar');
+
+  if (dataUrl) {
+    img.src = dataUrl;
+    img.style.display = 'block';
+    if (ini) ini.style.display = 'none';
+    if (removeBtn) removeBtn.style.display = 'inline-flex';
+    // update topbar and banner avatars to show image
+    if (topbarAvatar) {
+      topbarAvatar.innerHTML = `<img src="${dataUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" />`;
+    }
+    if (bannerAvatar) {
+      bannerAvatar.innerHTML = `<img src="${dataUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" />`;
+    }
+  } else {
+    img.src = '';
+    img.style.display = 'none';
+    if (ini) ini.style.display = '';
+    if (removeBtn) removeBtn.style.display = 'none';
+    // restore initials
+    if (curUser && topbarAvatar) {
+      topbarAvatar.innerHTML = '';
+      topbarAvatar.textContent = initials(curUser.username);
+    }
+    if (curUser && bannerAvatar) {
+      bannerAvatar.innerHTML = '';
+      bannerAvatar.textContent = initials(curUser.username);
+    }
+  }
+}
+
+function handleProfilePicUpload(input) {
+  $('profile-pic-err').style.display = 'none';
+  $('profile-pic-ok').style.display  = 'none';
+  const file = input.files[0];
+  if (!file) return;
+  if (!file.type.startsWith('image/')) {
+    showAlert('profile-pic-err', 'Please select an image file (JPG, PNG, GIF, or WebP).', 'err'); return;
+  }
+  if (file.size > 5 * 1024 * 1024) {
+    showAlert('profile-pic-err', 'Image is too large — maximum size is 5 MB.', 'err'); return;
+  }
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const key = getProfilePicKey();
+    if (!key) return;
+    try {
+      localStorage.setItem(key, e.target.result);
+    } catch(err) {
+      showAlert('profile-pic-err', 'Could not save image — storage may be full.', 'err'); return;
+    }
+    applyProfilePic(e.target.result);
+    logAudit('USER_PROFILE_PIC_UPLOAD', { userId: curUser.userId });
+    showAlert('profile-pic-ok', '✓ Profile picture updated successfully.', 'ok');
+    input.value = '';
+  };
+  reader.onerror = () => showAlert('profile-pic-err', 'Failed to read image. Please try again.', 'err');
+  reader.readAsDataURL(file);
+}
+
+function removeProfilePic() {
+  const key = getProfilePicKey();
+  if (!key) return;
+  if (!confirm('Remove your profile picture?')) return;
+  localStorage.removeItem(key);
+  applyProfilePic(null);
+  logAudit('USER_PROFILE_PIC_REMOVED', { userId: curUser.userId });
+  showAlert('profile-pic-ok', '✓ Profile picture removed.', 'ok');
+}
+
+// ════════════════════════════════
+//  ADMIN — CLEAR AUDIT LOG
+// ════════════════════════════════
+function clearAuditLog() {
+  if (!confirm('Are you sure you want to clear the entire audit log? This cannot be undone.')) return;
+  state.audit = [];
+  saveState();
+  renderAuditLog();
+  logAudit('AUDIT_LOG_CLEARED', { by: state.adminCreds.id });
+}
+
+// ════════════════════════════════
+//  ADMIN — CHANGE PASSWORD MODAL
+// ════════════════════════════════
+function openChangePasswordModal() {
+  $('chpw-err').style.display = 'none';
+  $('chpw-ok').style.display  = 'none';
+  $('chpw-cur').value  = '';
+  $('chpw-new').value  = '';
+  $('chpw-new2').value = '';
+  ['chpw-cur','chpw-new','chpw-new2'].forEach(id => { $(id).type = 'password'; });
+  ['chpw-tog-cur','chpw-tog-new','chpw-tog-new2'].forEach(id => { const b=$(id); if(b) b.textContent='Show'; });
+  $('chpw-modal-overlay').style.display = 'flex';
+}
+
+function closeChangePasswordModal(e) {
+  if (e && e.target !== $('chpw-modal-overlay')) return;
+  $('chpw-modal-overlay').style.display = 'none';
+}
+
+function submitChangePassword() {
+  const cur  = ($('chpw-cur').value  || '').trim();
+  const np   = ($('chpw-new').value  || '').trim();
+  const np2  = ($('chpw-new2').value || '').trim();
+
+  $('chpw-err').style.display = 'none';
+  $('chpw-ok').style.display  = 'none';
+
+  if (!cur)              { showAlert('chpw-err', 'Please enter your current password.', 'err'); return; }
+  if (cur !== state.adminCreds.pass) { showAlert('chpw-err', 'Current password is incorrect.', 'err'); return; }
+  if (!np)               { showAlert('chpw-err', 'Please enter a new password.', 'err'); return; }
+  if (np.length < 4)     { showAlert('chpw-err', 'New password must be at least 4 characters.', 'err'); return; }
+  if (np !== np2)        { showAlert('chpw-err', 'New passwords do not match.', 'err'); return; }
+
+  state.adminCreds.pass = np;
+  saveState();
+  logAudit('ADMIN_PASSWORD_CHANGED', { id: state.adminCreds.id });
+  showAlert('chpw-ok', '✓ Password updated successfully.', 'ok');
+  $('chpw-cur').value  = '';
+  $('chpw-new').value  = '';
+  $('chpw-new2').value = '';
+  setTimeout(() => { $('chpw-modal-overlay').style.display = 'none'; }, 1500);
+}
+
+function toggleChpwVis(inputId, btnId) {
+  const inp = $(inputId), btn = $(btnId);
+  if (!inp || !btn) return;
+  const hide = inp.type === 'password';
+  inp.type = hide ? 'text' : 'password';
+  btn.textContent = hide ? 'Hide' : 'Show';
+}
+
+// ════════════════════════════════
+//  BOOT — connect to shared cloud state (if configured)
+// ════════════════════════════════
+async function boot() {
+  const statusEl = $('cloud-status');
+  const loginBtn = $('login-btn');
+  loginBtn.textContent = 'Sign in';
+
+  if (!cloudReady) {
+    statusEl.style.display = 'block';
+    statusEl.style.background = 'var(--amber-light)';
+    statusEl.style.borderColor = '#FCCF5D';
+    statusEl.style.color = 'var(--amber)';
+    statusEl.textContent = '⚠️ Running in local-only mode — data stays in this browser. Add Supabase credentials to enable shared access across devices.';
+    return;
+  }
+
+  statusEl.style.display = 'block';
+  statusEl.textContent = 'Connecting to shared workspace…';
+  loginBtn.disabled = true;
+  loginBtn.style.opacity = '.6';
+
+  const ok = await loadStateFromCloud();
+  loginBtn.disabled = false;
+  loginBtn.style.opacity = '';
+
+  if (ok) {
+    statusEl.style.background = 'var(--accent-light)';
+    statusEl.style.borderColor = '#B7DFC8';
+    statusEl.style.color = 'var(--accent-text)';
+    statusEl.textContent = '✓ Connected — shared across all devices.';
+    setTimeout(() => { statusEl.style.display = 'none'; }, 2500);
+    subscribeToCloud();
+  } else {
+    statusEl.style.background = 'var(--red-light)';
+    statusEl.style.borderColor = '#F1BCBA';
+    statusEl.style.color = 'var(--red-text)';
+    statusEl.textContent = '⚠️ Could not reach the shared workspace — showing locally cached data only.';
+  }
+}
+
+boot();
+
+</script>
+
+<!-- ══ CHANGE PASSWORD MODAL ══ -->
+<div id="chpw-modal-overlay" onclick="closeChangePasswordModal(event)" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;align-items:center;justify-content:center;padding:1rem;">
+  <div style="background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow-md);width:100%;max-width:400px;padding:1.75rem 2rem;position:relative;" onclick="event.stopPropagation()">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;">
+      <div>
+        <div style="font-size:16px;font-weight:600;">Change Password</div>
+        <div style="font-size:12px;color:var(--text2);margin-top:2px;">Update your admin password</div>
+      </div>
+      <button onclick="$('chpw-modal-overlay').style.display='none'" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--text3);line-height:1;padding:4px;">×</button>
+    </div>
+
+    <div id="chpw-err" class="alert alert-err"></div>
+    <div id="chpw-ok"  class="alert alert-ok"></div>
+
+    <div class="field">
+      <label class="lbl">Current Password <span style="color:var(--red)">*</span></label>
+      <div style="position:relative">
+        <input type="password" id="chpw-cur" placeholder="Enter current password" style="padding-right:68px" />
+        <button type="button" id="chpw-tog-cur" onclick="toggleChpwVis('chpw-cur','chpw-tog-cur')" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:11px;font-weight:500;color:var(--accent);padding:2px 4px;">Show</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="lbl">New Password</label>
+      <div style="position:relative">
+        <input type="password" id="chpw-new" placeholder="Enter new password" style="padding-right:68px" />
+        <button type="button" id="chpw-tog-new" onclick="toggleChpwVis('chpw-new','chpw-tog-new')" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:11px;font-weight:500;color:var(--accent);padding:2px 4px;">Show</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="lbl">Confirm New Password</label>
+      <div style="position:relative">
+        <input type="password" id="chpw-new2" placeholder="Repeat new password" style="padding-right:68px" />
+        <button type="button" id="chpw-tog-new2" onclick="toggleChpwVis('chpw-new2','chpw-tog-new2')" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:11px;font-weight:500;color:var(--accent);padding:2px 4px;">Show</button>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:8px;margin-top:1rem;">
+      <button class="btn btn-primary" style="flex:1;justify-content:center" onclick="submitChangePassword()">
+        <svg width="14" height="14" viewBox="0 0 15 15" fill="none"><rect x="3" y="6" width="9" height="7" rx="1" stroke="currentColor" stroke-width="1.4" fill="none"/><path d="M5 6V4.5a2.5 2.5 0 015 0V6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+        Update Password
+      </button>
+      <button class="btn btn-outline" onclick="$('chpw-modal-overlay').style.display='none'">Cancel</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
